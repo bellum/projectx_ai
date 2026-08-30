@@ -14,7 +14,7 @@
 ### Verification status
 
 - `npm install --package-lock-only` completed successfully (the package lock is present).
-- `npm ci`, `npm run lint`, `npm test -- --run`, and `npm run build` complete successfully. The unit/component suite contains 16 passing tests across seven files.
+- `npm ci`, `npm run lint`, `npm test -- --run`, and `npm run build` complete successfully. The unit/component suite contains 17 passing tests across eight files.
 - The Firestore emulator's Java dependency was installed locally and `npm run test:rules` completes successfully: 2 rules tests pass using only emulator data.
 - Initial dependency resolution reported an engine warning for `jsdom` under Node 24.8.0; this does not by itself indicate a project failure.
 
@@ -38,6 +38,7 @@
 ### Calendar default adjustment
 
 - Changed the default visible pair from previous/current to current/next month so predicted upcoming dates are visible immediately. Older pairs remain reachable; forward browsing still stops at the current/next pair.
+- Changed unmarked-date interaction so a single tap opens a one-day draft immediately; pointer dragging across days opens an inclusive range draft without triggering the one-day action.
 
 ### Deployment documentation
 
