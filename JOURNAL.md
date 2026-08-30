@@ -39,6 +39,9 @@
 
 - Changed the default visible pair from previous/current to current/next month so predicted upcoming dates are visible immediately. Older pairs remain reachable; forward browsing still stops at the current/next pair.
 - Changed unmarked-date interaction so a single tap opens a one-day draft immediately; pointer dragging across days opens an inclusive range draft without triggering the one-day action.
+- Added a live highlighted preview while dragging, constrained popup date controls within the editor, and compacted same-year calendar headings to show the year only once.
+- Removed the secondary delete confirmation. Delete is now an immediate red action on the same non-wrapping row as Cancel and Save.
+- Positioned Delete at the left of the editor action row while retaining neutral Cancel and primary Save styling.
 
 ### Deployment documentation
 
