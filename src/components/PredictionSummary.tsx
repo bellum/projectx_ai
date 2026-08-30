@@ -1,0 +1,3 @@
+import type { Prediction } from '../types/period'
+function Item({ title, value }: { title: string; value: Prediction }) { return <article><h3>{title}</h3>{value.date ? <p><strong>{value.date}</strong><br/><small>{value.gapDays} day gap · {value.sampleCount} sample{value.sampleCount === 1 ? '' : 's'}</small></p> : <p><small>{value.unavailable}</small></p>}</article> }
+export function PredictionSummary({ latestGap, average }: { latestGap: Prediction; average: Prediction }) { return <section className="predictions" aria-label="Predicted next start"><h2>Predicted next start</h2><div><Item title="Latest gap" value={latestGap}/><Item title="12-month average" value={average}/></div></section> }

@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function approvedUser() { return request.auth != null && request.auth.token.calendarAccess == true; }
+    function validPeriod(data) {
+      return data.keys().hasOnly(['startedAt', 'endedAt', 'isEnded', 'comment'])
+        && data.keys().hasAll(['startedAt', 'endedAt', 'isEnded'])
+        && data.startedAt is timestamp && data.endedAt is timestamp
+        && data.startedAt <= data.endedAt && data.isEnded == true
+        && (!('comment' in data) || (data.comment is string && data.comment.size() <= 2000));
+    }
+    match /periods/{periodId} {
+      allow read, delete: if approvedUser();
+      allow create, update: if approvedUser() && validPeriod(request.resource.data);
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

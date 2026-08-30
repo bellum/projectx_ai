@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.firebase/
+firebase-debug.log
+firestore-debug.log
+.env
+.env.local
+*.tsbuildinfo
+# Sensitive local-only data and privileged Firebase credentials.
+periods.json.bak
+service_account.json
+*service-account*.json
+*firebase-adminsdk*.json
+/data
+prompt.md

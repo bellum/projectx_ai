@@ -1,0 +1,2 @@
+import { useAuth } from '../auth/useAuth'
+export function SignInScreen({ configured }: { configured: boolean }) { const { signIn, error } = useAuth(); return <main className="sign-in"><section><p className="eyebrow">Private calendar</p><h1>Periods</h1>{configured ? <><p>Sign in to view and update the shared calendar.</p>{error && <p role="alert">{error}</p>}<button onClick={() => void signIn()}>Continue with Google</button></> : <p role="alert">Firebase web configuration is missing. Add the public VITE_FIREBASE_* values before deploying.</p>}</section></main> }
