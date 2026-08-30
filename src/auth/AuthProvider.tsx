@@ -4,7 +4,7 @@ import { auth } from '../lib/firebase'
 import { AuthContext, type AuthValue } from './authContext'
 import { hasCalendarAccess } from './access'
 
-function readableError(error: unknown): string { const code = (error as { code?: string }).code; if (code === 'auth/unauthorized-domain') return 'This site is not authorized for Google sign-in.'; if (code === 'auth/popup-blocked') return 'The sign-in popup was blocked. Allow popups and try again.'; if (code === 'auth/popup-closed-by-user') return 'Sign-in was cancelled. Try again when ready.'; if (code === 'auth/network-request-failed') return 'Network error. Check your connection and try again.'; return 'Google sign-in failed. Please try again.' }
+function readableError(error: unknown): string { const code = (error as { code?: string }).code; if (code === 'auth/unauthorized-domain') return 'This site is not authorized for Google sign-in. Add its hostname in Firebase Authentication → Settings → Authorized domains.'; if (code === 'auth/operation-not-allowed') return 'Google sign-in is not enabled for this Firebase project.'; if (code === 'auth/configuration-not-found') return 'Firebase Google sign-in configuration is incomplete.'; if (code === 'auth/popup-blocked') return 'The sign-in popup was blocked. Allow popups and try again.'; if (code === 'auth/popup-closed-by-user') return 'Sign-in was cancelled. Try again when ready.'; if (code === 'auth/network-request-failed') return 'Network error. Check your connection and try again.'; return 'Google sign-in failed. Please try again.' }
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null), [loading, setLoading] = useState(true), [error, setError] = useState<string>()
   useEffect(() => {
@@ -12,7 +12,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async next => {
       if (!next) { if (active) { setUser(null); setLoading(false) }; return }
       try {
-        const token = await getIdTokenResult(next)
+        const token = await getIdTokenResult(next, true)
         if (!active) return
         if (!hasCalendarAccess(token.claims)) {
           setUser(null); setError('This Google account is not authorized to access the calendar.'); setLoading(false)

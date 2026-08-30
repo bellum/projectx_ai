@@ -27,6 +27,8 @@
 
 - Created a git-ignored emulator-only `.env.local` with non-production placeholder browser configuration.
 - Started local Firebase Auth and Firestore emulators and the Vite development server. The app is available at `http://127.0.0.1:5173/` and uses a local-only emulator database.
+- Production Firebase Auth custom claims are not available in this local emulator configuration; test them by running the browser with real public Web App configuration and `VITE_USE_EMULATORS=false`.
+- Confirmed the local browser is now configured with complete public production Web App values and `VITE_USE_EMULATORS=false`. The auth provider now force-refreshes the ID token after sign-in so a newly granted custom claim is applied immediately.
 
 ### Local backup import
 
