@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-09-12 17:42 - Opened the upcoming pair after a recent period on mobile
+
+Changed: On an initial mobile calendar load, switch from the usual previous/current pair to current/next when the latest loaded period ended from today through seven calendar days ago. Manual month navigation is unchanged.
+
+Why: Keep an imminent predicted next start visible without requiring mobile users to navigate forward.
+
+Tested: `npm run lint`, `npm test -- --run` (23 passing), `npm run build`, and `git diff --check` pass.
+
 ## 2026-09-12 17:35 - Renamed period gaps to intervals
 
 Changed: Renamed the derived analytics schema from `gaps`/`gapDays` to `intervals`/`intervalDays`, renamed the latest prediction accordingly, and changed the UI to “Cycle insights” with interval language. The local emulator seeder now retries test-account creation until Auth is ready.
