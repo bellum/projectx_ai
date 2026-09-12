@@ -1,0 +1,22 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
+import { InsightsPage } from './InsightsPage'
+
+const data = vi.hoisted(() => ({ signOut: vi.fn(), analytics: { periodCount: 4, latest: { id: 'latest', start: '2024-10-10', end: '2024-10-14' }, gaps: [{ periodId: 'oldest', start: '2022-01-10', end: '2022-01-14', gapDays: 27 }, { periodId: 'first', start: '2023-01-10', end: '2023-01-14', gapDays: 28 }, { periodId: 'latest', start: '2024-10-10', end: '2024-10-14', gapDays: 32 }] } }))
+vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ user: { email: 'person@example.test' }, signOut: data.signOut }) }))
+vi.mock('../data/usePeriodAnalytics', () => ({ usePeriodAnalytics: () => ({ value: data.analytics, loading: false }) }))
+
+describe('InsightsPage', () => {
+  it('shows a 24-month chart and lets users navigate to older gap history', async () => {
+    const onCalendar = vi.fn()
+    render(<InsightsPage onCalendar={onCalendar}/>)
+    expect(screen.getByText('24 months')).toBeInTheDocument()
+    expect(screen.getByText('Typical gap')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show newer gap history' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Show older gap history' }))
+    expect(screen.getAllByText('27 days')).not.toHaveLength(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Calendar' }))
+    expect(onCalendar).toHaveBeenCalledOnce()
+  })
+})

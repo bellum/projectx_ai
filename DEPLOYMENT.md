@@ -75,6 +75,14 @@ npx firebase-tools deploy --only firestore:rules,firestore:indexes
 
 The rules in [firestore.rules](firestore.rules) allow authenticated access only to schema-valid documents under `periods/{periodId}`. If an unknown dependency fails after deployment, restore the previous ruleset from Firebase Console's rules history while investigating. Firebase Admin utilities are unaffected by Firestore rules.
 
+After deploying these rules, run the one-time analytics backfill from a trusted machine before using the prediction or Insights features:
+
+```sh
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json npm run migrate:analytics
+```
+
+This migration reads the legacy periods and writes only `periodAnalytics/summary`. Do not add the service-account file to the repository, GitHub, or Vite environment variables.
+
 ## Post-deploy verification
 
 1. Open the Pages URL and confirm assets load under the project subpath.

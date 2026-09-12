@@ -49,6 +49,17 @@ async function seedPeriods(projectId) {
         }
         await batch.commit()
       }
+      const normalized = records.map((record) => ({ id: record.doc_id, start: new Date(new Date(record.startedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10), end: new Date(new Date(record.endedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10) })).sort((first, second) => first.start.localeCompare(second.start) || first.end.localeCompare(second.end) || first.id.localeCompare(second.id))
+      const latest = normalized.at(-1)
+      const summary = writeBatch(database)
+      summary.set(doc(database, 'periodAnalytics', 'summary'), {
+        schemaVersion: 1,
+        periodCount: normalized.length,
+        ...(latest ? { latestPeriodId: latest.id, latestStartedAt: Timestamp.fromDate(new Date(`${latest.start}T00:00:00.000Z`)), latestEndedAt: Timestamp.fromDate(new Date(`${latest.end}T00:00:00.000Z`)) } : {}),
+        gaps: normalized.slice(1).map((period, index) => ({ periodId: period.id, startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), gapDays: Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) })),
+        updatedAt: Timestamp.now(),
+      })
+      await summary.commit()
     })
   } finally {
     await environment.cleanup()

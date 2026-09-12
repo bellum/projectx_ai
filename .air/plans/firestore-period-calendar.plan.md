@@ -8,6 +8,10 @@ Reuse the existing document-per-period model and its exact field types: Firestor
 
 Host the React/Vite application on GitHub Pages while Firebase continues to provide Google Authentication and Firestore. Register a Firebase Web App in the existing Firebase project to obtain public browser configuration; never copy, bundle, upload, or expose the Admin service-account JSON from the utility repository.
 
+# Analytics amendment
+
+Keep the legacy `periods` schema unchanged. Store derived normalized gap samples and latest-period metadata in a separate `periodAnalytics/summary` document. Rebuild that summary in the same client batch as every create, edit, merge, or delete; normal calendar loads then need only their bounded period window plus this one analytics document. Backfill the summary once through a trusted, Admin-SDK-only script that reads periods and writes no period documents. Add an in-app Insights page with a native accessible line chart: 12 months per mobile view, 24 months per wider view, and bounded backward/forward navigation through stored history.
+
 # Existing System Findings
 
 - `<utility-repository>/firestore/config.yml` points to Firebase project `projectx-d645c`, collection `periods`, and an Admin service-account JSON.

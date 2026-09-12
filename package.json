@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest",
     "emulator:seed": "node scripts/start-local-emulator.mjs",
+    "migrate:analytics": "node scripts/backfill-period-analytics.mjs",
     "test:rules": "PATH=/opt/homebrew/opt/openjdk/bin:$PATH firebase --config firebase.rules-test.json emulators:exec --project periods-rules-test --only auth,firestore \"vitest --config vitest.rules.config.ts --run\""
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "eslint": "latest",
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
+    "firebase-admin": "^14.4.0",
     "firebase-tools": "latest",
     "globals": "latest",
     "jsdom": "latest",

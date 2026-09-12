@@ -6,13 +6,14 @@ import { CalendarPage } from './CalendarPage'
 
 const data = vi.hoisted(() => ({ save: vi.fn(), remove: vi.fn(), signOut: vi.fn() }))
 vi.mock('../data/usePeriods', () => ({ usePeriods: () => ({ periods: [], loading: false }) }))
+vi.mock('../data/usePeriodAnalytics', () => ({ usePeriodAnalytics: () => ({ loading: false }) }))
 vi.mock('../data/periodRepository', () => ({ savePeriod: data.save, removePeriod: data.remove }))
 vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ user: { email: 'person@example.test' }, signOut: data.signOut }) }))
 describe('CalendarPage', () => {
   it('opens a one-day draft from one date selection and saves only after confirmation', async () => {
     data.save.mockReset().mockResolvedValue(undefined)
     const today = todayIsoDay()
-    render(<CalendarPage/>)
+    render(<CalendarPage onInsights={vi.fn()}/>)
     await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${today}`) }))
     expect(screen.getByRole('dialog')).toHaveTextContent('Add period')
     expect(data.save).not.toHaveBeenCalled()

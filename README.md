@@ -19,9 +19,19 @@ With `VITE_USE_EMULATORS=true` in `.env.local` and a local `data/periods.json.ba
 npm run emulator:seed
 ```
 
-The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the backup, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
+The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the backup, builds its local analytics summary, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
 
 The Firebase web configuration is intended for browser use. Never copy an Admin SDK service-account JSON, private key, or any credential from the utility repository into this project, Actions variables/secrets, or a Pages build. Admin credentials bypass Firestore rules.
+
+## Analytics migration
+
+The calendar stores one derived `periodAnalytics/summary` document containing normalized period gaps. This avoids loading historical periods to calculate predictions and powers the Insights chart. Deploy the updated Firestore Rules, then run this one-time backfill from a trusted machine:
+
+```sh
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json npm run migrate:analytics
+```
+
+The script reads the existing periods and writes only the derived analytics summary; it does not edit or log any period dates, comments, or document IDs. The Admin credential remains outside the repository and is never used by the browser. Later create, edit, merge, and delete operations refresh the summary in their same Firestore batch.
 
 ## Verification and deployment
 

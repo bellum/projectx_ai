@@ -9,9 +9,24 @@ service cloud.firestore {
         && data.startedAt <= data.endedAt && data.isEnded == true
         && (!('comment' in data) || (data.comment is string && data.comment.size() <= 2000));
     }
+    function validAnalytics(data) {
+      return data.keys().hasOnly(['schemaVersion', 'periodCount', 'latestPeriodId', 'latestStartedAt', 'latestEndedAt', 'gaps', 'updatedAt'])
+        && data.keys().hasAll(['schemaVersion', 'periodCount', 'gaps', 'updatedAt'])
+        && data.schemaVersion == 1
+        && data.periodCount is int && data.periodCount >= 0 && data.periodCount <= 10000
+        && data.gaps is list && data.gaps.size() <= 10000
+        && data.updatedAt is timestamp
+        && ((data.periodCount == 0 && !data.keys().hasAny(['latestPeriodId', 'latestStartedAt', 'latestEndedAt']))
+          || (data.periodCount > 0 && data.keys().hasAll(['latestPeriodId', 'latestStartedAt', 'latestEndedAt'])
+            && data.latestPeriodId is string && data.latestStartedAt is timestamp && data.latestEndedAt is timestamp));
+    }
     match /periods/{periodId} {
       allow read, delete: if approvedUser();
       allow create, update: if approvedUser() && validPeriod(request.resource.data);
+    }
+    match /periodAnalytics/summary {
+      allow read: if approvedUser();
+      allow create, update: if approvedUser() && validAnalytics(request.resource.data);
     }
     match /{document=**} { allow read, write: if false; }
   }
