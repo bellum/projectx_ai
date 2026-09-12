@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-09-12 17:14 - Fixed Android calendar range dragging
+
+Changed: Calendar day controls now disable the browser’s touch-pan gesture during selection and explicitly retain touch-pointer drags while allowing normal taps to open one-day drafts.
+
+Why: Android was cancelling the pointer sequence when it interpreted a finger drag as page scrolling, preventing range selection.
+
+Tested: Added a touch-pointer range-selection regression test; `npm run lint`, `npm test -- --run` (18 passing), and `npm run build` pass.
+
 ## 2026-09-12 17:11 - Added feature-commit workflow
 
 Changed: Added shared instructions to commit finished, verified features before beginning unrelated work, and to ask when a request may instead be a rework of pending changes.
