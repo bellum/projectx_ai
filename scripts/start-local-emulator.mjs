@@ -56,7 +56,7 @@ async function seedPeriods(projectId) {
         schemaVersion: 1,
         periodCount: normalized.length,
         ...(latest ? { latestPeriodId: latest.id, latestStartedAt: Timestamp.fromDate(new Date(`${latest.start}T00:00:00.000Z`)), latestEndedAt: Timestamp.fromDate(new Date(`${latest.end}T00:00:00.000Z`)) } : {}),
-        intervals: normalized.slice(1).map((period, index) => ({ periodId: period.id, startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), intervalDays: Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) })),
+        intervals: normalized.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: Timestamp.fromDate(new Date(`${normalized[index].start}T00:00:00.000Z`)), startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), intervalDays: Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) })),
         updatedAt: Timestamp.now(),
       })
       await summary.commit()
