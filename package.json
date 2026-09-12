@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest",
+    "data:reconcile": "node scripts/reconcile-local-periods.mjs",
     "emulator:seed": "node scripts/start-local-emulator.mjs",
     "migrate:analytics": "node scripts/backfill-period-analytics.mjs",
     "test:rules": "PATH=/opt/homebrew/opt/openjdk/bin:$PATH firebase --config firebase.rules-test.json emulators:exec --project periods-rules-test --only auth,firestore \"vitest --config vitest.rules.config.ts --run\""

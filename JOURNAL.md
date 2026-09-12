@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-09-12 17:59 - Added local period reconciliation fixture
+
+Changed: Added `npm run data:reconcile`, which reads the immutable local original backup and writes the canonical local `data/periods.json.bak` fixture. It merges every overlapping or directly adjacent range, retains the earliest document ID per group, and local emulator seeding now uses that fixture.
+
+Why: Existing duplicate and touching records created negative intervals; the local data can now be safely reconciled and inspected before any production migration is considered.
+
+Tested: Reconciled 383 local source records into 187 records; verified the source hash was unchanged, timestamps are canonical, and no resulting ranges overlap or touch. `npm run lint`, `npm test -- --run` (24 passing), `npm run build`, and `git diff --check` pass. Local emulator seeding completed with 187 records.
+
 ## 2026-09-12 17:45 - Restored mobile scrolling with long-press range selection
 
 Changed: Replaced immediate touch dragging with a 350 ms long press before range selection activates. Date buttons now permit normal vertical panning; an active long-press range prevents panning only while it is dragged. Mouse drag remains immediate.

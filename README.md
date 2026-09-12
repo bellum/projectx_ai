@@ -13,13 +13,21 @@ Access is limited to Firebase Auth accounts provisioned with the private `calend
 
 ## Local emulator demo
 
-With `VITE_USE_EMULATORS=true` in `.env.local` and a local `data/periods.json.bak` file, run this in one terminal:
+With `VITE_USE_EMULATORS=true` in `.env.local` and an untouched local `data/original_periods.json.bak` file, first generate the reconciled local fixture:
+
+```sh
+npm run data:reconcile
+```
+
+This writes `data/periods.json.bak`, preserving the original backup unchanged. It normalizes legacy timestamps, merges every overlap or direct next-day adjacency, retains the earliest document ID in each merged group, and writes canonical UTC-midnight timestamps. It never connects to Firebase.
+
+Then run this in one terminal:
 
 ```sh
 npm run emulator:seed
 ```
 
-The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the backup, builds its local analytics summary, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
+The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the reconciled fixture, builds its local analytics summary, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
 
 The Firebase web configuration is intended for browser use. Never copy an Admin SDK service-account JSON, private key, or any credential from the utility repository into this project, Actions variables/secrets, or a Pages build. Admin credentials bypass Firestore rules.
 

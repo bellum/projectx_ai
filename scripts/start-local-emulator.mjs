@@ -28,7 +28,7 @@ async function waitFor(url) {
 async function seedPeriods(projectId) {
   const records = JSON.parse(await readFile(backupPath, 'utf8'))
   if (!Array.isArray(records) || records.some((record) => !record.doc_id || !record.startedAt || !record.endedAt || record.isEnded !== true)) {
-    throw new Error('data/periods.json.bak must contain legacy period records with doc_id, timestamps, and isEnded: true.')
+    throw new Error('Run npm run data:reconcile first; data/periods.json.bak must contain legacy period records with doc_id, timestamps, and isEnded: true.')
   }
 
   const environment = await initializeTestEnvironment({ projectId, firestore: { host: '127.0.0.1', port: 8080 } })
