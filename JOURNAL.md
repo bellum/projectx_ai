@@ -1,5 +1,15 @@
 # Implementation journal
 
+## 2026-09-12 16:48 - Added journal maintenance instructions
+
+Changed: Added repository instructions for maintaining reverse-chronological journal entries with concise change, rationale, and test details.
+
+Why: Keep implementation history current, consistent, and safe to share.
+
+Tested: Reviewed both instruction files and verified the required format is stated.
+
+## Historical summary
+
 ## 2026-08-30 — Initial implementation
 
 ### Completed
