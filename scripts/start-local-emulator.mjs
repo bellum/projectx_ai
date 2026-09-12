@@ -56,7 +56,7 @@ async function seedPeriods(projectId) {
         schemaVersion: 1,
         periodCount: normalized.length,
         ...(latest ? { latestPeriodId: latest.id, latestStartedAt: Timestamp.fromDate(new Date(`${latest.start}T00:00:00.000Z`)), latestEndedAt: Timestamp.fromDate(new Date(`${latest.end}T00:00:00.000Z`)) } : {}),
-        gaps: normalized.slice(1).map((period, index) => ({ periodId: period.id, startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), gapDays: Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) })),
+        intervals: normalized.slice(1).map((period, index) => ({ periodId: period.id, startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), intervalDays: Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) })),
         updatedAt: Timestamp.now(),
       })
       await summary.commit()
@@ -68,22 +68,30 @@ async function seedPeriods(projectId) {
 }
 
 async function seedTestUser(projectId) {
-  const response = await fetch(`http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/accounts:batchCreate`, {
-    method: 'POST',
-    headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      allowOverwrite: true,
-      users: [{
-        localId: testUserId,
-        email: testEmail,
-        emailVerified: true,
-        displayName: 'Test user',
-        customAttributes: JSON.stringify({ calendarAccess: true }),
-        providerUserInfo: [{ providerId: 'google.com', rawId: testUserId, email: testEmail, displayName: 'Test user' }],
-      }],
-    }),
-  })
-  if (!response.ok) throw new Error(`Unable to create the local test account (${response.status}).`)
+  let status
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    try {
+      const response = await fetch(`http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/accounts:batchCreate`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          allowOverwrite: true,
+          users: [{
+            localId: testUserId,
+            email: testEmail,
+            emailVerified: true,
+            displayName: 'Test user',
+            customAttributes: JSON.stringify({ calendarAccess: true }),
+            providerUserInfo: [{ providerId: 'google.com', rawId: testUserId, email: testEmail, displayName: 'Test user' }],
+          }],
+        }),
+      })
+      if (response.ok) return
+      status = response.status
+    } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error(`Unable to create the local test account${status ? ` (${status})` : ''}.`)
 }
 
 const environment = await readFile(environmentPath, 'utf8').catch(() => '')

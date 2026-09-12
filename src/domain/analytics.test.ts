@@ -2,8 +2,8 @@ import { buildPeriodAnalytics } from './analytics'
 import type { Period } from '../types/period'
 
 describe('period analytics', () => {
-  it('stores each adjacent gap with the later period and latest period details', () => {
+  it('stores each adjacent interval with the later period and latest period details', () => {
     const periods: Period[] = [{ id: 'later', start: '2024-03-10', end: '2024-03-14', comment: '' }, { id: 'first', start: '2024-01-01', end: '2024-01-05', comment: '' }, { id: 'middle', start: '2024-02-01', end: '2024-02-03', comment: '' }]
-    expect(buildPeriodAnalytics(periods)).toEqual({ periodCount: 3, latest: { id: 'later', start: '2024-03-10', end: '2024-03-14' }, gaps: [{ periodId: 'middle', start: '2024-02-01', end: '2024-02-03', gapDays: 27 }, { periodId: 'later', start: '2024-03-10', end: '2024-03-14', gapDays: 36 }] })
+    expect(buildPeriodAnalytics(periods)).toEqual({ periodCount: 3, latest: { id: 'later', start: '2024-03-10', end: '2024-03-14' }, intervals: [{ periodId: 'middle', start: '2024-02-01', end: '2024-02-03', intervalDays: 27 }, { periodId: 'later', start: '2024-03-10', end: '2024-03-14', intervalDays: 36 }] })
   })
 })

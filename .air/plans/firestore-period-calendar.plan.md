@@ -10,7 +10,7 @@ Host the React/Vite application on GitHub Pages while Firebase continues to prov
 
 # Analytics amendment
 
-Keep the legacy `periods` schema unchanged. Store derived normalized gap samples and latest-period metadata in a separate `periodAnalytics/summary` document. Rebuild that summary in the same client batch as every create, edit, merge, or delete; normal calendar loads then need only their bounded period window plus this one analytics document. Backfill the summary once through a trusted, Admin-SDK-only script that reads periods and writes no period documents. Add an in-app Insights page with a native accessible line chart: 12 months per mobile view, 24 months per wider view, and bounded backward/forward navigation through stored history.
+Keep the legacy `periods` schema unchanged. Store derived normalized interval samples and latest-period metadata in a separate `periodAnalytics/summary` document. Rebuild that summary in the same client batch as every create, edit, merge, or delete; normal calendar loads then need only their bounded period window plus this one analytics document. Backfill the summary once through a trusted, Admin-SDK-only script that reads periods and writes no period documents. Add an in-app Cycle insights page with a native accessible line chart: 12 months per mobile view, 24 months per wider view, and bounded backward/forward navigation through stored history.
 
 # Existing System Findings
 
@@ -65,7 +65,7 @@ All files are **Create** because the target repository still contains no applica
 - **Create** `src/types/period.ts` — raw Firestore record, normalized date-only period, editor draft, and prediction types.
 - **Create** `src/domain/dateUtils.ts` — ISO date parsing/formatting, nearest-midnight legacy Timestamp conversion, canonical UTC-midnight writes, calendar arithmetic, month matrices, and today/future checks.
 - **Create** `src/domain/periodRules.ts` — record normalization, chronological sorting, overlap/adjacency detection, merge bounds, comment combination, and range validation.
-- **Create** `src/domain/predictions.ts` — exact-latest-gap and trailing-12-month-average prediction calculations.
+- **Create** `src/domain/predictions.ts` — exact-latest-interval and trailing-12-month-average prediction calculations.
 - **Create** `src/domain/dateUtils.test.ts` — legacy 21:00/22:00/23:00/00:00 mappings, canonical writes, DST independence, leap days, and month/year boundaries.
 - **Create** `src/domain/periodRules.test.ts` — commentless legacy records, overlap/adjacency/multi-merge/edit semantics, reversed taps, future rejection, and comment ordering.
 - **Create** `src/domain/predictions.test.ts` — 14/15-day threshold, exact formula, 12-month sample filtering/rounding, unavailable history, and boundary cases.
@@ -84,7 +84,7 @@ All files are **Create** because the target repository still contains no applica
 - **Create** `src/components/TwoMonthCalendar.tsx` — initial previous/current pair and past-only navigation, with forward navigation capped at current month.
 - **Create** `src/components/MonthGrid.tsx` — accessible date buttons and marked/selected/predicted/today/future states.
 - **Create** `src/components/PeriodEditor.tsx` — bottom sheet/dialog for comments, save/cancel, change dates, merged-note review, and confirmed deletion.
-- **Create** `src/components/PredictionSummary.tsx` — simultaneous latest-gap and 12-month-average predicted dates below the calendar.
+- **Create** `src/components/PredictionSummary.tsx` — simultaneous latest-interval and 12-month-average predicted dates below the calendar.
 - **Create** `src/components/CalendarPage.test.tsx` — complete mobile/keyboard workflows over legacy and commented records.
 
 # Implementation Steps
@@ -126,8 +126,8 @@ All files are **Create** because the target repository still contains no applica
 2. For a single-record edit, retain that document ID. For a multi-record merge, retain the earliest touched document ID, delete the remaining touched IDs, and union the minimum start/maximum end.
 3. Combine non-empty comments in chronological order separated by blank lines; show the combined text in the editor before any write.
 4. In `src/domain/predictions.ts`, show predictions only when the latest start is more than 14 calendar days before today:
-   - Latest-gap prediction: `latest.end + (latest.start - previous.end)`.
-   - Average prediction: mean of adjacent end-to-next-start gaps whose later start is within the inclusive trailing 12 calendar months, rounded to the nearest whole day, added to `latest.end`.
+   - Latest-interval prediction: `latest.end + (latest.start - previous.end)`.
+   - Average prediction: mean of adjacent end-to-next-start intervals whose later start is within the inclusive trailing 12 calendar months, rounded to the nearest whole day, added to `latest.end`.
 5. In `src/data/periodRepository.ts`, subscribe to the existing `periods` collection with `orderBy("startedAt")`; use one Firestore batch to set the retained/new record and delete superseded records.
 6. New and updated records write only `startedAt`, `endedAt`, `isEnded: true`, and optional `comment`; do not introduce migration-only audit fields absent from the established schema.
 7. Use `src/data/usePeriods.ts` to manage realtime lifecycle and pending/error state; disable duplicate saves/deletes while a batch is pending.
@@ -140,7 +140,7 @@ All files are **Create** because the target repository still contains no applica
 3. Let the first unmarked date tap set a range start and the second open a normalized editor draft. A marked-date tap opens its record; “Change dates” seeds range selection from that period.
 4. Disable dates after local today. Before opening `src/components/PeriodEditor.tsx`, compute all touched records, merged bounds, and combined comment; require explicit Save.
 5. Provide inline validation, save/write errors, cancel, change-dates, and confirmed deletion in `src/components/PeriodEditor.tsx`.
-6. Render both predictions through `src/components/PredictionSummary.tsx`, including their gap/sample counts and explicit unavailable-history states.
+6. Render both predictions through `src/components/PredictionSummary.tsx`, including their interval/sample counts and explicit unavailable-history states.
 7. Test complete authenticated, mobile, keyboard, merge/comment, delete, navigation, and prediction paths in `src/components/CalendarPage.test.tsx`.
 
 ## Task 7: Verify against the existing project and deploy
@@ -171,8 +171,8 @@ All files are **Create** because the target repository still contains no applica
 16. A merge draft combines non-empty comments chronologically with blank-line separators and requires explicit review/save.
 17. Delete requires confirmation; cancelling changes nothing and confirming removes only the selected document.
 18. Predictions are absent until the latest start is more than 14 days old.
-19. When eligible, the latest-gap prediction exactly equals `latest.end + (latest.start - previous.end)`.
-20. The average prediction uses only qualifying adjacent pairs from the trailing 12 calendar months, rounds the mean gap to the nearest whole day, and adds it to the latest end.
+19. When eligible, the latest-interval prediction exactly equals `latest.end + (latest.start - previous.end)`.
+20. The average prediction uses only qualifying adjacent pairs from the trailing 12 calendar months, rounds the mean interval to the nearest whole day, and adds it to the latest end.
 21. Both calculated prediction dates display together when samples exist; insufficient samples show a labeled unavailable state.
 22. A default-branch push deploys `dist` to the correct GitHub Pages base path only after lint, tests, rules tests, and build pass.
 23. Two authenticated browser sessions receive Firestore changes in realtime without refreshing.

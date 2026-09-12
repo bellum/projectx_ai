@@ -1,20 +1,28 @@
 # Implementation journal
 
-## 2026-09-12 17:34 - Refined gap-insights visual design
+## 2026-09-12 17:35 - Renamed period gaps to intervals
+
+Changed: Renamed the derived analytics schema from `gaps`/`gapDays` to `intervals`/`intervalDays`, renamed the latest prediction accordingly, and changed the UI to “Cycle insights” with interval language. The local emulator seeder now retries test-account creation until Auth is ready.
+
+Why: “Interval” is clearer, more neutral language for the days between periods, and the local demo should reliably create its allowlisted test account after startup.
+
+Tested: `npm run lint`, `npm test -- --run` (21 passing), `npm run test:rules` (3 passing), `npm run build`, and `git diff --check` pass. `npm run emulator:seed` completed with 383 local periods and the local `test@gmail.com` account.
+
+## 2026-09-12 17:34 - Refined interval-insights visual design
 
 Changed: Reworked the Insights chart into a focused card with a labelled range selector, gradient chart area, value guides, meaningful axis labels, compact statistics, and a collapsible accessible data table.
 
-Why: The initial functional chart exposed raw data too prominently and did not provide the visual hierarchy needed for quick gap interpretation.
+Why: The initial functional chart exposed raw data too prominently and did not provide the visual hierarchy needed for quick interval interpretation.
 
 Tested: `npm run lint`, `npm test -- --run` (21 passing), and `npm run build` pass after the visual redesign.
 
-## 2026-09-12 17:30 - Persisted gap analytics and added Insights page
+## 2026-09-12 17:30 - Persisted interval analytics and added Insights page
 
-Changed: Added a derived `periodAnalytics/summary` document containing normalized gap samples and latest-period details. Period create, edit, merge, and delete writes refresh it in the same Firestore batch; predictions now read it instead of the bounded calendar query. Added a responsive Insights page with an accessible line chart, 12-month mobile or 24-month wider views, and navigation through earlier history. Added a credential-safe Admin-SDK migration command and seeded the local emulator with the summary.
+Changed: Added a derived `periodAnalytics/summary` document containing normalized interval samples and latest-period details. Period create, edit, merge, and delete writes refresh it in the same Firestore batch; predictions now read it instead of the bounded calendar query. Added a responsive Insights page with an accessible line chart, 12-month mobile or 24-month wider views, and navigation through earlier history. Added a credential-safe Admin-SDK migration command and seeded the local emulator with the summary.
 
-Why: Keep predictions correct with on-demand period loading and expose longer-term gap history without loading all periods in the browser.
+Why: Keep predictions correct with on-demand period loading and expose longer-term interval history without loading all periods in the browser.
 
-Tested: `npm run lint`, `npm test -- --run` (21 passing), `npm run test:rules` (3 passing), `npm run build`, and local emulator seeding verified 383 periods and 382 gap samples. The production migration was deliberately not run.
+Tested: `npm run lint`, `npm test -- --run` (21 passing), `npm run test:rules` (3 passing), `npm run build`, and local emulator seeding verified 383 periods and 382 interval samples. The production migration was deliberately not run.
 
 ## 2026-09-12 17:14 - Fixed Android calendar range dragging
 
