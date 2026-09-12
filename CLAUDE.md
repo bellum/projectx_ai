@@ -1,5 +1,11 @@
 # Repository instructions
 
+## Feature commits
+
+- Commit a finished, verified feature before starting a newly requested task that is not directly related to the current uncommitted work.
+- If it is unclear whether the new request is a rework/continuation of that work or a separate task, ask the user before committing or starting it.
+- Do not push a commit unless the user explicitly asks to push it.
+
 ## Implementation journal
 
 Maintain `JOURNAL.md` for every material change made in this repository.

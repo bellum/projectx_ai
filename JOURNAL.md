@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-09-12 17:11 - Added feature-commit workflow
+
+Changed: Added shared instructions to commit finished, verified features before beginning unrelated work, and to ask when a request may instead be a rework of pending changes.
+
+Why: Preserve coherent feature commits without prematurely committing work the user intends to revise.
+
+Tested: Reviewed both repository instruction files for matching workflow guidance.
+
 ## 2026-09-12 16:59 - Added repeatable local emulator demo setup
 
 Changed: Added `npm run emulator:seed`, which starts local Auth and Firestore emulators, resets and imports the local period backup, preloads `test@gmail.com` as a Google-popup account with the local `calendarAccess` claim, and detects the standard Homebrew Java location when needed.
