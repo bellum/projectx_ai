@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase/firestore'
-import { addDays, isoDayToTimestamp, timestampToIsoDay } from './dateUtils'
+import { addDays, endOfMonth, isInLastWeekOfMonth, isoDayToTimestamp, timestampToIsoDay } from './dateUtils'
 
 describe('date utilities', () => {
   it.each(['00:00:00Z', '21:00:00Z', '22:00:00Z', '23:00:00Z'])('normalizes %s by nearest UTC midnight', time => {
@@ -10,5 +10,10 @@ describe('date utilities', () => {
     expect(isoDayToTimestamp('2024-02-29').toDate().toISOString()).toBe('2024-02-29T00:00:00.000Z')
     expect(addDays('2024-12-31', 1)).toBe('2025-01-01')
     expect(addDays('2024-03-10', 1)).toBe('2024-03-11')
+  })
+  it('identifies the last seven calendar days and month ends', () => {
+    expect(isInLastWeekOfMonth('2024-02-22')).toBe(false)
+    expect(isInLastWeekOfMonth('2024-02-23')).toBe(true)
+    expect(endOfMonth('2024-02-01')).toBe('2024-02-29')
   })
 })

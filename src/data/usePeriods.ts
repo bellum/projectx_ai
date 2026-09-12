@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { subscribePeriods } from './periodRepository'
-import type { Period } from '../types/period'
+import type { IsoDate, Period } from '../types/period'
 
-export function usePeriods() {
-  const [periods, setPeriods] = useState<Period[]>([]), [loading, setLoading] = useState(true), [error, setError] = useState<string>()
-  useEffect(() => subscribePeriods(data => { setPeriods(data); setLoading(false); setError(undefined) }, reason => { setError(reason.message); setLoading(false) }), [])
-  return { periods, loading, error }
+export function usePeriods(from: IsoDate, to: IsoDate) {
+  const [result, setResult] = useState<{ periods: Period[]; from: IsoDate; to: IsoDate; error?: string }>()
+  useEffect(() => subscribePeriods(from, to, data => setResult({ periods: data, from, to }), reason => setResult({ periods: [], from, to, error: reason.message })), [from, to])
+  const current = result && result.from === from && result.to === to ? result : undefined
+  return { periods: current?.periods ?? [], loading: !current, error: current?.error }
 }

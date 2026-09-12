@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { todayIsoDay } from '../domain/dateUtils'
+import { addMonths, endOfMonth, isInLastWeekOfMonth, startOfMonth, todayIsoDay } from '../domain/dateUtils'
 import { createDraft } from '../domain/periodRules'
 import { calculatePredictions } from '../domain/predictions'
 import { removePeriod, savePeriod } from '../data/periodRepository'
@@ -11,8 +11,11 @@ import { PeriodEditor } from './PeriodEditor'
 import { PredictionSummary } from './PredictionSummary'
 
 export function CalendarPage() {
-  const { periods, loading, error: loadError } = usePeriods(), { user, signOut } = useAuth(); const today = todayIsoDay()
-  const [anchor, setAnchor] = useState(today.slice(0, 8) + '01' as IsoDate), [draft, setDraft] = useState<PeriodDraft>(), [preview, setPreview] = useState<{ start: IsoDate; end: IsoDate }>(), [pending, setPending] = useState(false), [mutationError, setMutationError] = useState<string>()
+  const { user, signOut } = useAuth(); const today = todayIsoDay(), currentMonth = startOfMonth(today)
+  const [anchor, setAnchor] = useState<IsoDate>(() => isInLastWeekOfMonth(today) ? currentMonth : addMonths(currentMonth, -1))
+  const loadFrom = anchor === currentMonth ? addMonths(currentMonth, -2) : addMonths(anchor, -1), loadTo = endOfMonth(addMonths(anchor, 1))
+  const { periods, loading, error: loadError } = usePeriods(loadFrom, loadTo)
+  const [draft, setDraft] = useState<PeriodDraft>(), [preview, setPreview] = useState<{ start: IsoDate; end: IsoDate }>(), [pending, setPending] = useState(false), [mutationError, setMutationError] = useState<string>()
   const predictions = calculatePredictions(periods, today)
   const select = (day: IsoDate) => { const existing = periods.find(item => day >= item.start && day <= item.end); if (existing) { setDraft(createDraft(periods, existing.start, existing.end, existing)); return } setDraft(createDraft(periods, day, day)) }
   const execute = async (operation: () => Promise<void>) => { setPending(true); setMutationError(undefined); try { await operation(); setDraft(undefined) } catch (reason) { setMutationError((reason as Error).message || 'Unable to save. Please try again.') } finally { setPending(false) } }

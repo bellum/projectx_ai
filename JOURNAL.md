@@ -1,5 +1,21 @@
 # Implementation journal
 
+## 2026-09-12 16:59 - Added repeatable local emulator demo setup
+
+Changed: Added `npm run emulator:seed`, which starts local Auth and Firestore emulators, resets and imports the local period backup, preloads `test@gmail.com` as a Google-popup account with the local `calendarAccess` claim, and detects the standard Homebrew Java location when needed.
+
+Why: Make the full period-calendar demo reproducible without production data access or privileged credentials.
+
+Tested: Ran `npm run emulator:seed` from a clean state; it started both emulators, imported 383 records, and created the claimed test user.
+
+## 2026-09-12 16:52 - Added on-demand period loading
+
+Changed: Period subscriptions now load a bounded month window instead of the entire history. The initial window covers the current month and two prior months; navigation includes the month before the displayed pair. The initial pair is previous/current except during the last seven days of a month, when it is current/next.
+
+Why: Reduce initial Firestore reads while keeping nearby history and likely next-period visibility available.
+
+Tested: `npm run lint`, `npm test -- --run` (18 passing), and `npm run build`.
+
 ## 2026-09-12 16:48 - Added journal maintenance instructions
 
 Changed: Added repository instructions for maintaining reverse-chronological journal entries with concise change, rationale, and test details.

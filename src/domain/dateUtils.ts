@@ -31,3 +31,5 @@ export function addMonths(monthDay: IsoDate, months: number): IsoDate {
 export function monthLabel(monthDay: IsoDate): string { return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(parseIsoDay(monthDay)) }
 export function daysInMonth(monthDay: IsoDate): number { const d = parseIsoDay(startOfMonth(monthDay)); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate() }
 export function weekdayOffset(monthDay: IsoDate): number { return parseIsoDay(startOfMonth(monthDay)).getUTCDay() }
+export function endOfMonth(monthDay: IsoDate): IsoDate { return addDays(addMonths(monthDay, 1), -1) }
+export function isInLastWeekOfMonth(day: IsoDate): boolean { return parseIsoDay(day).getUTCDate() > daysInMonth(day) - 7 }
