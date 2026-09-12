@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-09-12 17:45 - Restored mobile scrolling with long-press range selection
+
+Changed: Replaced immediate touch dragging with a 350 ms long press before range selection activates. Date buttons now permit normal vertical panning; an active long-press range prevents panning only while it is dragged. Mouse drag remains immediate.
+
+Why: Immediate drag capture blocked native mobile page scrolling, while long press cleanly separates scrolling, one-day taps, and range creation.
+
+Tested: `npm run lint`, `npm test -- --run` (24 passing), `npm run build`, and `git diff --check` pass.
+
 ## 2026-09-12 17:42 - Opened the upcoming pair after a recent period on mobile
 
 Changed: On an initial mobile calendar load, switch from the usual previous/current pair to current/next when the latest loaded period ended from today through seven calendar days ago. Manual month navigation is unchanged.
