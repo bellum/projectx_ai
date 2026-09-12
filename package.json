@@ -10,6 +10,8 @@
     "test": "vitest",
     "data:reconcile": "node scripts/reconcile-local-periods.mjs",
     "emulator:seed": "node scripts/start-local-emulator.mjs",
+    "backup:periods": "node scripts/backup-production-periods.mjs",
+    "migrate:periods": "node scripts/reconcile-production-periods.mjs",
     "migrate:analytics": "node scripts/backfill-period-analytics.mjs",
     "test:rules": "PATH=/opt/homebrew/opt/openjdk/bin:$PATH firebase --config firebase.rules-test.json emulators:exec --project periods-rules-test --only auth,firestore \"vitest --config vitest.rules.config.ts --run\""
   },

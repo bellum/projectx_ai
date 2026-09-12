@@ -1,5 +1,21 @@
 # Implementation journal
 
+## 2026-09-12 18:07 - Added read-only production period backup command
+
+Changed: Added `npm run backup:periods`, which downloads the live `periods` collection into a timestamped `backup-<UTC date and time>.json` file in the ignored local `data/` directory.
+
+Why: A standalone verified production backup is needed before investigating or applying the guarded reconciliation.
+
+Tested: Syntax passes and the command refuses execution without an external Admin credential before any Firebase access. `npm run lint`, `npm test -- --run` (24 passing), `npm run build`, and `git diff --check` pass. No production read or write was run.
+
+## 2026-09-12 18:03 - Added guarded production period reconciliation
+
+Changed: Added a production Admin-SDK migration with count-only dry-run default and explicit apply confirmations. It verifies live IDs and normalized ranges against the immutable original backup, reports only mismatch category counts when it refuses, and provides an explicit current-live override for reviewed divergences. Its apply transaction rechecks the newest ignored local production backup, atomically merges overlaps/adjacency with chronological comments, deletes only superseded records, and rebuilds interval analytics.
+
+Why: Production cleanup needs an auditable, reversible path that cannot silently overwrite newer data, run against the wrong Firebase project, or expose Admin credentials to the app or CI.
+
+Tested: `node --check` passes; missing-credential and missing current-live-confirmation guards reject execution before any Firebase access. `npm run lint`, `npm test -- --run` (24 passing), `npm run build`, and `git diff --check` pass. The production migration was not run.
+
 ## 2026-09-12 17:59 - Added local period reconciliation fixture
 
 Changed: Added `npm run data:reconcile`, which reads the immutable local original backup and writes the canonical local `data/periods.json.bak` fixture. It merges every overlapping or directly adjacent range, retains the earliest document ID per group, and local emulator seeding now uses that fixture.

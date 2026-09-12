@@ -41,6 +41,50 @@ GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-ac
 
 The script reads the existing periods and writes only the derived analytics summary; it does not edit or log any period dates, comments, or document IDs. The Admin credential remains outside the repository and is never used by the browser. Later create, edit, merge, and delete operations refresh the summary in their same Firestore batch.
 
+## Production period reconciliation
+
+`npm run data:reconcile` is local-only. For the approved production cleanup, use `npm run migrate:periods`, which reads live data with an Admin credential and compares every document ID and normalized date range against `data/original_periods.json.bak`. It refuses to write if anything differs. A dry run is the default:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods
+```
+
+Only after reviewing the count-only dry-run result and creating a fresh `data/backup-*.json` snapshot with `npm run backup:periods`, apply it with the mandatory confirmation token:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS
+```
+
+The apply operation verifies the live collection again against the newest `data/backup-*.json` file inside its Firestore transaction; any changed ID, timestamp, or comment stops the write. It retains the earliest document ID for each overlap/adjacency group, writes canonical UTC-midnight bounds, combines live comments chronologically with blank lines, deletes superseded records, and rebuilds `periodAnalytics/summary`. Do not run this command from GitHub Actions or a browser.
+
+If the dry run reports an expected, reviewed divergence from the original backup, inspect the current live dataset plan without bypassing the backup requirement:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --accept-live --dry-run
+```
+
+Only after reviewing that count-only plan, apply it with both confirmations:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --accept-live --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS --confirm=RECONCILE_CURRENT_LIVE_PERIODS
+```
+
+To download a standalone timestamped backup of the live periods before reviewing or migrating, run this read-only command. Its output is `backup-<UTC date and time>.json` in the ignored local `data/` directory:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run backup:periods
+```
+
 ## Verification and deployment
 
 Run `npm run lint`, `npm test -- --run`, `npm run test:rules`, and `npm run build`. Rules tests use isolated local Auth and Firestore emulator ports, so they do not alter an active local preview; the first run downloads emulator binaries.

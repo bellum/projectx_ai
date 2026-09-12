@@ -83,6 +83,52 @@ GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-ac
 
 This migration reads the legacy periods and writes only `periodAnalytics/summary`. Do not add the service-account file to the repository, GitHub, or Vite environment variables.
 
+## Reconcile duplicate production periods
+
+The production reconciliation is deliberately separate from the analytics backfill. First run its guarded dry run from a trusted machine; it verifies the complete live collection against the local original backup and reports only counts:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods
+```
+
+If the dry run succeeds and its counts are expected, create a fresh `data/backup-*.json` with `npm run backup:periods`, then apply explicitly:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS
+```
+
+The script rechecks that the live collection exactly matches the newest `data/backup-*.json` inside one atomic transaction before it retains the earliest ID for each overlap/adjacency group, merges comments, deletes superseded records, and rebuilds analytics. It refuses unknown schemas, an unexpected project, nonmatching original ranges, a stale production backup, or a plan over 500 batch operations. Never run it in a browser or GitHub Action.
+
+If the original backup mismatch has been reviewed and the current live collection is the approved source of truth, first produce its count-only plan:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --accept-live --dry-run
+```
+
+Apply only after reviewing that plan, with both confirmation tokens and an external backup directory:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run migrate:periods -- --accept-live --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS --confirm=RECONCILE_CURRENT_LIVE_PERIODS
+```
+
+To make an independent read-only backup before the dry run, download it to the ignored local `data/` directory:
+
+```sh
+GOOGLE_CLOUD_PROJECT=projectx-d645c \
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json \
+npm run backup:periods
+```
+
+The command writes `backup-<UTC date and time>.json` and reports only its filename and period count.
+
 ## Post-deploy verification
 
 1. Open the Pages URL and confirm assets load under the project subpath.
