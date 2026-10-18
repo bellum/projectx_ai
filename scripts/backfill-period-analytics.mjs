@@ -20,10 +20,10 @@ initializeApp({ credential: applicationDefault(), projectId })
 const database = getFirestore(), snapshot = await database.collection('periods').orderBy('startedAt').get()
 const periods = snapshot.docs.map((item) => {
   const data = item.data()
-  if (!(data.startedAt instanceof Timestamp) || !(data.endedAt instanceof Timestamp) || data.isEnded !== true) throw new Error('A period document has an unsupported schema; migration stopped without writing analytics.')
-  return { id: item.id, start: isoDay(data.startedAt), end: isoDay(data.endedAt) }
+  if (!(data.startedAt instanceof Timestamp) || !(data.endedAt instanceof Timestamp) || data.isEnded !== true || data.intensity !== undefined && !['light', 'medium', 'hard'].includes(data.intensity)) throw new Error('A period document has an unsupported schema; migration stopped without writing analytics.')
+  return { id: item.id, start: isoDay(data.startedAt), end: isoDay(data.endedAt), intensity: data.intensity }
 })
-const intervals = periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: dayTimestamp(periods[index].start), startedAt: dayTimestamp(period.start), endedAt: dayTimestamp(period.end), intervalDays: wholeDaysBetween(periods[index].end, period.start) }))
+const intervals = periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: dayTimestamp(periods[index].start), startedAt: dayTimestamp(period.start), endedAt: dayTimestamp(period.end), intervalDays: wholeDaysBetween(periods[index].end, period.start), ...(period.intensity ? { intensity: period.intensity } : {}) }))
 const latest = periods.at(-1)
 await database.doc('periodAnalytics/summary').set({ schemaVersion: 1, periodCount: periods.length, ...(latest ? { latestPeriodId: latest.id, latestStartedAt: dayTimestamp(latest.start), latestEndedAt: dayTimestamp(latest.end) } : {}), intervals, updatedAt: Timestamp.now() })
 console.log(JSON.stringify({ migratedPeriods: periods.length, storedIntervals: intervals.length }))

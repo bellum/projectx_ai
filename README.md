@@ -27,13 +27,13 @@ Then run this in one terminal:
 npm run emulator:seed
 ```
 
-The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the reconciled fixture, builds its local analytics summary, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
+The command starts local Auth and Firestore emulators, replaces only the local `periods` collection with the reconciled fixture, adds balanced Light/Medium/Hard ratings to the nine latest emulator-only periods, builds its local analytics summary, and creates the local Google-popup account `test@gmail.com` with `calendarAccess: true`. In the Google emulator popup, choose that listed test account. Run `npm run dev` in another terminal. This process never contacts the production Firebase project or uses an Admin credential.
 
 The Firebase web configuration is intended for browser use. Never copy an Admin SDK service-account JSON, private key, or any credential from the utility repository into this project, Actions variables/secrets, or a Pages build. Admin credentials bypass Firestore rules.
 
 ## Analytics migration
 
-The calendar stores one derived `periodAnalytics/summary` document containing normalized period intervals. Each interval counts only the whole unmarked days strictly between the previous period's end and the next period's start. This avoids loading historical periods to calculate predictions and powers the Cycle insights chart. Deploy the updated Firestore Rules, then run this backfill from a trusted machine whenever interval calculation semantics change:
+The calendar stores one derived `periodAnalytics/summary` document containing normalized period intervals and their optional period intensity. Each interval counts only the whole unmarked days strictly between the previous period's end and the next period's start. Insights renders rated periods as green Light, orange Medium, or red Hard graph points. This avoids loading historical periods to calculate predictions and powers the Cycle insights chart. Deploy the updated Firestore Rules, then run this backfill from a trusted machine whenever interval calculation semantics change:
 
 ```sh
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json npm run migrate:analytics

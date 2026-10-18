@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-10-18 13:30 - Added intensity ratings to Insights
+
+Changed: Persisted each period's optional intensity in its derived analytics interval. The Insights chart keeps its line dots dedicated to interval measurements and shows period ratings on a separate aligned strip beneath the plot as green Light, orange Medium, or red Hard markers. Added a labelled legend, period-specific rating tooltips, and an intensity column in the accessible data table. Local emulator seeding now adds three examples of each rating across its nine latest periods.
+
+Why: Show how period difficulty changes alongside interval length without creating a separate graph or relying on color alone.
+
+Tested: `npm test -- --run` (29 passing), `npm run lint`, `npm run build`, changed-script syntax checks, and `git diff --check` pass. The build retains its existing bundle-size warning. Reseeded 187 local periods and verified the analytics summary contains three Light, three Medium, and three Hard demo samples; the app responds over localhost.
+
 ## 2026-10-18 13:02 - Added kitten period-intensity selector
 
 Changed: Added an optional Light ✨🐈, Medium 🌧️🐈, or Hard ⚡🐈 experience selector to the period editor and persisted it as a validated `intensity` field. Clicking a selected kitten tile again clears it without a separate control, and selection uses a filled background with one highlighted border and no inset ring. Legacy records remain valid, merged periods retain the hardest selected value, and backup, reconciliation, and emulator paths preserve the field. Added accessible selector styling and regression coverage.

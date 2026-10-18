@@ -8,6 +8,7 @@ const backupPath = new URL('../data/periods.json.bak', import.meta.url)
 const environmentPath = new URL('../.env.local', import.meta.url)
 const testEmail = 'test@gmail.com'
 const testUserId = 'local-google-test-user'
+const demoIntensities = ['light', 'medium', 'hard']
 
 function valueFromEnvironment(text, key) {
   const line = text.split(/\r?\n/).find((item) => item.startsWith(`${key}=`))
@@ -30,6 +31,8 @@ async function seedPeriods(projectId) {
   if (!Array.isArray(records) || records.some((record) => !record.doc_id || !record.startedAt || !record.endedAt || record.isEnded !== true || record.intensity !== undefined && !['light', 'medium', 'hard'].includes(record.intensity))) {
     throw new Error('Run npm run data:reconcile first; data/periods.json.bak must contain legacy period records with doc_id, timestamps, and isEnded: true.')
   }
+  const demoStart = Math.max(0, records.length - 9)
+  const seededRecords = records.map((record, index) => ({ ...record, intensity: record.intensity ?? (index >= demoStart ? demoIntensities[(index - demoStart) % demoIntensities.length] : undefined) }))
 
   const environment = await initializeTestEnvironment({ projectId, firestore: { host: '127.0.0.1', port: 8080 } })
   try {
@@ -38,9 +41,9 @@ async function seedPeriods(projectId) {
       const existing = await getDocs(collection(database, 'periods'))
       await Promise.all(existing.docs.map((snapshot) => deleteDoc(snapshot.ref)))
 
-      for (let index = 0; index < records.length; index += 500) {
+      for (let index = 0; index < seededRecords.length; index += 500) {
         const batch = writeBatch(database)
-        for (const record of records.slice(index, index + 500)) {
+        for (const record of seededRecords.slice(index, index + 500)) {
           batch.set(doc(database, 'periods', record.doc_id), {
             startedAt: Timestamp.fromDate(new Date(record.startedAt)),
             endedAt: Timestamp.fromDate(new Date(record.endedAt)),
@@ -50,14 +53,14 @@ async function seedPeriods(projectId) {
         }
         await batch.commit()
       }
-      const normalized = records.map((record) => ({ id: record.doc_id, start: new Date(new Date(record.startedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10), end: new Date(new Date(record.endedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10) })).sort((first, second) => first.start.localeCompare(second.start) || first.end.localeCompare(second.end) || first.id.localeCompare(second.id))
+      const normalized = seededRecords.map((record) => ({ id: record.doc_id, start: new Date(new Date(record.startedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10), end: new Date(new Date(record.endedAt).getTime() + 12 * 60 * 60 * 1000).toISOString().slice(0, 10), intensity: record.intensity })).sort((first, second) => first.start.localeCompare(second.start) || first.end.localeCompare(second.end) || first.id.localeCompare(second.id))
       const latest = normalized.at(-1)
       const summary = writeBatch(database)
       summary.set(doc(database, 'periodAnalytics', 'summary'), {
         schemaVersion: 1,
         periodCount: normalized.length,
         ...(latest ? { latestPeriodId: latest.id, latestStartedAt: Timestamp.fromDate(new Date(`${latest.start}T00:00:00.000Z`)), latestEndedAt: Timestamp.fromDate(new Date(`${latest.end}T00:00:00.000Z`)) } : {}),
-        intervals: normalized.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: Timestamp.fromDate(new Date(`${normalized[index].start}T00:00:00.000Z`)), startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), intervalDays: Math.max(0, Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) - 1) })),
+        intervals: normalized.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: Timestamp.fromDate(new Date(`${normalized[index].start}T00:00:00.000Z`)), startedAt: Timestamp.fromDate(new Date(`${period.start}T00:00:00.000Z`)), endedAt: Timestamp.fromDate(new Date(`${period.end}T00:00:00.000Z`)), intervalDays: Math.max(0, Math.round((Date.parse(`${period.start}T00:00:00.000Z`) - Date.parse(`${normalized[index].end}T00:00:00.000Z`)) / 86_400_000) - 1), ...(period.intensity ? { intensity: period.intensity } : {}) })),
         updatedAt: Timestamp.now(),
       })
       await summary.commit()

@@ -59,13 +59,13 @@ function mergedComment(group) {
 }
 function hardestIntensity(group) { return group.periods.reduce((hardest, period) => !period.intensity || hardest && intensityRank[hardest] >= intensityRank[period.intensity] ? hardest : period.intensity, undefined) }
 function summaryFor(groups) {
-  const periods = groups.map(group => ({ id: group.periods[0].id, start: group.start, end: group.end }))
+  const periods = groups.map(group => ({ id: group.periods[0].id, start: group.start, end: group.end, intensity: hardestIntensity(group) }))
   const latest = periods.at(-1)
   return {
     schemaVersion: 1,
     periodCount: periods.length,
     ...(latest ? { latestPeriodId: latest.id, latestStartedAt: canonicalTimestamp(latest.start), latestEndedAt: canonicalTimestamp(latest.end) } : {}),
-    intervals: periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: canonicalTimestamp(periods[index].start), startedAt: canonicalTimestamp(period.start), endedAt: canonicalTimestamp(period.end), intervalDays: wholeDaysBetween(periods[index].end, period.start) })),
+    intervals: periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: canonicalTimestamp(periods[index].start), startedAt: canonicalTimestamp(period.start), endedAt: canonicalTimestamp(period.end), intervalDays: wholeDaysBetween(periods[index].end, period.start), ...(period.intensity ? { intensity: period.intensity } : {}) })),
     updatedAt: Timestamp.now(),
   }
 }

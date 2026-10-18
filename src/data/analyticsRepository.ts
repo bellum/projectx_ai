@@ -1,7 +1,7 @@
 import { doc, onSnapshot, serverTimestamp } from 'firebase/firestore'
 import { isoDayToTimestamp, timestampToIsoDay } from '../domain/dateUtils'
 import { db } from '../lib/firebase'
-import type { IntervalSample, PeriodAnalytics } from '../types/period'
+import type { IntervalSample, PeriodAnalytics, PeriodIntensity } from '../types/period'
 
 export const analyticsSummary = doc(db, 'periodAnalytics', 'summary')
 
@@ -10,17 +10,18 @@ export function analyticsPayload(analytics: PeriodAnalytics) {
     schemaVersion: 1,
     periodCount: analytics.periodCount,
     ...(analytics.latest ? { latestPeriodId: analytics.latest.id, latestStartedAt: isoDayToTimestamp(analytics.latest.start), latestEndedAt: isoDayToTimestamp(analytics.latest.end) } : {}),
-    intervals: analytics.intervals.map(sample => ({ periodId: sample.periodId, ...(sample.previousStart ? { previousStartedAt: isoDayToTimestamp(sample.previousStart) } : {}), startedAt: isoDayToTimestamp(sample.start), endedAt: isoDayToTimestamp(sample.end), intervalDays: sample.intervalDays })),
+    intervals: analytics.intervals.map(sample => ({ periodId: sample.periodId, ...(sample.previousStart ? { previousStartedAt: isoDayToTimestamp(sample.previousStart) } : {}), startedAt: isoDayToTimestamp(sample.start), endedAt: isoDayToTimestamp(sample.end), intervalDays: sample.intervalDays, ...(sample.intensity ? { intensity: sample.intensity } : {}) })),
     updatedAt: serverTimestamp(),
   }
 }
 
 function timestamp(value: unknown): value is { toMillis(): number } { return Boolean(value) && typeof (value as { toMillis?: unknown }).toMillis === 'function' }
+function validIntensity(value: unknown): value is PeriodIntensity { return value === 'light' || value === 'medium' || value === 'hard' }
 function interval(value: unknown): IntervalSample {
-  const raw = value as { periodId?: unknown; previousStartedAt?: unknown; startedAt?: unknown; endedAt?: unknown; intervalDays?: unknown }
+  const raw = value as { periodId?: unknown; previousStartedAt?: unknown; startedAt?: unknown; endedAt?: unknown; intervalDays?: unknown; intensity?: unknown }
   const intervalDays = raw.intervalDays
-  if (typeof raw.periodId !== 'string' || !timestamp(raw.startedAt) || !timestamp(raw.endedAt) || raw.previousStartedAt !== undefined && !timestamp(raw.previousStartedAt) || typeof intervalDays !== 'number' || !Number.isInteger(intervalDays)) throw new Error('Malformed period analytics data.')
-  return { periodId: raw.periodId, ...(raw.previousStartedAt ? { previousStart: timestampToIsoDay(raw.previousStartedAt as never) } : {}), start: timestampToIsoDay(raw.startedAt as never), end: timestampToIsoDay(raw.endedAt as never), intervalDays }
+  if (typeof raw.periodId !== 'string' || !timestamp(raw.startedAt) || !timestamp(raw.endedAt) || raw.previousStartedAt !== undefined && !timestamp(raw.previousStartedAt) || typeof intervalDays !== 'number' || !Number.isInteger(intervalDays) || raw.intensity !== undefined && !validIntensity(raw.intensity)) throw new Error('Malformed period analytics data.')
+  return { periodId: raw.periodId, ...(raw.previousStartedAt ? { previousStart: timestampToIsoDay(raw.previousStartedAt as never) } : {}), start: timestampToIsoDay(raw.startedAt as never), end: timestampToIsoDay(raw.endedAt as never), intervalDays, ...(raw.intensity ? { intensity: raw.intensity as PeriodIntensity } : {}) }
 }
 export function normalizeAnalytics(raw: unknown): PeriodAnalytics {
   const value = raw as { schemaVersion?: unknown; periodCount?: unknown; latestPeriodId?: unknown; latestStartedAt?: unknown; latestEndedAt?: unknown; intervals?: unknown }

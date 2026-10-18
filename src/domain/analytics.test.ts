@@ -7,7 +7,7 @@ describe('period analytics', () => {
     expect(buildPeriodAnalytics(periods)).toEqual({ periodCount: 3, latest: { id: 'later', start: '2024-03-10', end: '2024-03-14' }, intervals: [{ periodId: 'middle', previousStart: '2024-01-01', start: '2024-02-01', end: '2024-02-03', intervalDays: 26 }, { periodId: 'later', previousStart: '2024-02-01', start: '2024-03-10', end: '2024-03-14', intervalDays: 35 }] })
   })
   it('counts only whole days strictly between adjacent periods', () => {
-    const periods: Period[] = [{ id: 'previous', start: '2026-09-12', end: '2026-09-16', comment: '' }, { id: 'current', start: '2026-10-15', end: '2026-10-18', comment: '' }]
-    expect(buildPeriodAnalytics(periods).intervals[0].intervalDays).toBe(28)
+    const periods: Period[] = [{ id: 'previous', start: '2026-09-12', end: '2026-09-16', comment: '' }, { id: 'current', start: '2026-10-15', end: '2026-10-18', comment: '', intensity: 'hard' }]
+    expect(buildPeriodAnalytics(periods).intervals[0]).toMatchObject({ intervalDays: 28, intensity: 'hard' })
   })
 })
