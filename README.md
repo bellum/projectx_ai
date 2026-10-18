@@ -59,7 +59,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-ac
 npm run migrate:periods -- --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS
 ```
 
-The apply operation verifies the live collection again against the newest `data/backup-*.json` file inside its Firestore transaction; any changed ID, timestamp, or comment stops the write. It retains the earliest document ID for each overlap/adjacency group, writes canonical UTC-midnight bounds, combines live comments chronologically with blank lines, deletes superseded records, and rebuilds `periodAnalytics/summary`. Do not run this command from GitHub Actions or a browser.
+The apply operation verifies the live collection again against the newest `data/backup-*.json` file inside its Firestore transaction; any changed ID, timestamp, comment, or intensity stops the write. It retains the earliest document ID for each overlap/adjacency group, writes canonical UTC-midnight bounds, combines live comments chronologically with blank lines, keeps the hardest selected intensity, deletes superseded records, and rebuilds `periodAnalytics/summary`. Do not run this command from GitHub Actions or a browser.
 
 If the dry run reports an expected, reviewed divergence from the original backup, inspect the current live dataset plan without bypassing the backup requirement:
 
@@ -102,4 +102,4 @@ Before production mutation, perform a read-only browser smoke check that reports
 
 ## Data behavior
 
-Every period uses `startedAt`, `endedAt`, `isEnded: true`, and an optional `comment`. Legacy timestamp instants are normalized by adding twelve hours in UTC before selecting their day: `21:00`–`23:00` map forward and midnight remains on the same day. New writes are always UTC midnight. The UI batches normal merges, retaining the earliest touched document ID; simultaneous clients can still race because Firestore rules cannot query for cross-document overlaps.
+Every period uses `startedAt`, `endedAt`, `isEnded: true`, an optional `comment`, and an optional `intensity` of `light`, `medium`, or `hard`. Legacy timestamp instants are normalized by adding twelve hours in UTC before selecting their day: `21:00`–`23:00` map forward and midnight remains on the same day. New writes are always UTC midnight. The UI batches normal merges, retaining the earliest touched document ID and hardest selected intensity; simultaneous clients can still race because Firestore rules cannot query for cross-document overlaps.

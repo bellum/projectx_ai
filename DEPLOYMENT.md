@@ -101,7 +101,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-ac
 npm run migrate:periods -- --apply --confirm=MERGE_OVERLAPPING_AND_ADJACENT_PERIODS
 ```
 
-The script rechecks that the live collection exactly matches the newest `data/backup-*.json` inside one atomic transaction before it retains the earliest ID for each overlap/adjacency group, merges comments, deletes superseded records, and rebuilds analytics. It refuses unknown schemas, an unexpected project, nonmatching original ranges, a stale production backup, or a plan over 500 batch operations. Never run it in a browser or GitHub Action.
+The script rechecks that the live collection exactly matches the newest `data/backup-*.json` inside one atomic transaction before it retains the earliest ID for each overlap/adjacency group, merges comments, keeps the hardest selected intensity, deletes superseded records, and rebuilds analytics. It refuses unknown schemas, an unexpected project, nonmatching original ranges, a stale production backup, or a plan over 500 batch operations. Never run it in a browser or GitHub Action.
 
 If the original backup mismatch has been reviewed and the current live collection is the approved source of truth, first produce its count-only plan:
 

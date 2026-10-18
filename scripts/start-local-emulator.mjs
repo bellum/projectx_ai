@@ -27,7 +27,7 @@ async function waitFor(url) {
 
 async function seedPeriods(projectId) {
   const records = JSON.parse(await readFile(backupPath, 'utf8'))
-  if (!Array.isArray(records) || records.some((record) => !record.doc_id || !record.startedAt || !record.endedAt || record.isEnded !== true)) {
+  if (!Array.isArray(records) || records.some((record) => !record.doc_id || !record.startedAt || !record.endedAt || record.isEnded !== true || record.intensity !== undefined && !['light', 'medium', 'hard'].includes(record.intensity))) {
     throw new Error('Run npm run data:reconcile first; data/periods.json.bak must contain legacy period records with doc_id, timestamps, and isEnded: true.')
   }
 
@@ -45,6 +45,7 @@ async function seedPeriods(projectId) {
             startedAt: Timestamp.fromDate(new Date(record.startedAt)),
             endedAt: Timestamp.fromDate(new Date(record.endedAt)),
             isEnded: true,
+            ...(record.intensity ? { intensity: record.intensity } : {}),
           })
         }
         await batch.commit()

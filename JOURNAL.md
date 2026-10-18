@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-10-18 13:02 - Added kitten period-intensity selector
+
+Changed: Added an optional Light ✨🐈, Medium 🌧️🐈, or Hard ⚡🐈 experience selector to the period editor and persisted it as a validated `intensity` field. Clicking a selected kitten tile again clears it without a separate control, and selection uses a filled background with one highlighted border and no inset ring. Legacy records remain valid, merged periods retain the hardest selected value, and backup, reconciliation, and emulator paths preserve the field. Added accessible selector styling and regression coverage.
+
+Why: Let users record how difficult a period was with friendly kitten faces while keeping the meaning clear through visible text labels.
+
+Tested: `npm test -- --run` (29 passing), `npm run test:rules` (3 passing), `npm run lint`, `npm run build`, syntax checks for all changed scripts, and `git diff --check` pass. The build retains its existing bundle-size warning. Seeded 187 records into the local emulators and verified both the app and Emulator UI respond over localhost.
+
 ## 2026-10-18 12:39 - Corrected whole-day interval counts
 
 Changed: Analytics now excludes both period boundary dates when counting whole days between periods, including live summary updates, production backfills/reconciliation, and local emulator seeding. Prediction date arithmetic accounts for the new interval meaning so forecast dates remain unchanged. Added a regression case covering September 16 through October 15.

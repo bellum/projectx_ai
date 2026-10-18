@@ -8,6 +8,7 @@ const liveConfirmation = '--confirm=RECONCILE_CURRENT_LIVE_PERIODS'
 const sourcePath = new URL('../data/original_periods.json.bak', import.meta.url)
 const dataDirectory = new URL('../data/', import.meta.url)
 const dayMilliseconds = 86_400_000
+const intensityRank = { light: 1, medium: 2, hard: 3 }
 const argumentsSet = new Set(process.argv.slice(2))
 const apply = argumentsSet.has('--apply')
 const acceptLive = argumentsSet.has('--accept-live')
@@ -27,7 +28,7 @@ function daysBetween(first, second) { return Math.round((Date.parse(`${second}T0
 function wholeDaysBetween(first, second) { return Math.max(0, daysBetween(first, second) - 1) }
 function assertFields(data) {
   const keys = Object.keys(data)
-  if (keys.some(key => !['startedAt', 'endedAt', 'isEnded', 'comment'].includes(key)) || data.isEnded !== true || typeof data.comment !== 'undefined' && (typeof data.comment !== 'string' || data.comment.length > 2000)) {
+  if (keys.some(key => !['startedAt', 'endedAt', 'isEnded', 'comment', 'intensity'].includes(key)) || data.isEnded !== true || typeof data.comment !== 'undefined' && (typeof data.comment !== 'string' || data.comment.length > 2000) || typeof data.intensity !== 'undefined' && !intensityRank[data.intensity]) {
     throw new Error('A live document has an unsupported schema; stopped without writing.')
   }
 }
@@ -36,7 +37,7 @@ function livePeriod(snapshot) {
   assertFields(data)
   const start = isoDay(data.startedAt), end = isoDay(data.endedAt)
   if (start > end) throw new Error('A live document has a reversed date range; stopped without writing.')
-  return { id: snapshot.id, start, end, startedAt: data.startedAt, endedAt: data.endedAt, comment: data.comment ?? '' }
+  return { id: snapshot.id, start, end, startedAt: data.startedAt, endedAt: data.endedAt, comment: data.comment ?? '', intensity: data.intensity }
 }
 function reconcile(periods) {
   const groups = []
@@ -56,6 +57,7 @@ function mergedComment(group) {
   if (comment.length > 2000) throw new Error('A merged comment would exceed 2,000 characters; stopped without writing.')
   return comment
 }
+function hardestIntensity(group) { return group.periods.reduce((hardest, period) => !period.intensity || hardest && intensityRank[hardest] >= intensityRank[period.intensity] ? hardest : period.intensity, undefined) }
 function summaryFor(groups) {
   const periods = groups.map(group => ({ id: group.periods[0].id, start: group.start, end: group.end }))
   const latest = periods.at(-1)
@@ -78,7 +80,7 @@ async function loadLatestBackup() {
   const filename = (await readdir(dataDirectory)).filter(item => /^backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.json$/.test(item)).sort().at(-1)
   if (!filename) throw new Error('Create a fresh data/backup-<UTC date and time>.json with npm run backup:periods before applying.')
   const records = JSON.parse(await readFile(new URL(filename, dataDirectory), 'utf8'))
-  if (!Array.isArray(records) || records.some(record => !record?.doc_id || typeof record.startedAt !== 'string' || typeof record.endedAt !== 'string' || record.isEnded !== true || typeof record.comment !== 'undefined' && typeof record.comment !== 'string')) throw new Error('The newest production backup has an unsupported schema.')
+  if (!Array.isArray(records) || records.some(record => !record?.doc_id || typeof record.startedAt !== 'string' || typeof record.endedAt !== 'string' || record.isEnded !== true || typeof record.comment !== 'undefined' && typeof record.comment !== 'string' || typeof record.intensity !== 'undefined' && !intensityRank[record.intensity])) throw new Error('The newest production backup has an unsupported schema.')
   return { filename, records }
 }
 function compareWithBackup(live, records) {
@@ -86,7 +88,7 @@ function compareWithBackup(live, records) {
   const liveById = new Map(live.map(period => [period.id, period]))
   const missingFromLive = records.filter(record => !liveById.has(record.doc_id)).length
   const unexpectedInLive = live.filter(period => !backupById.has(period.id)).length
-  const changedRecords = live.filter(period => { const backup = backupById.get(period.id); return backup && (backup.startedAt !== period.startedAt.toDate().toISOString() || backup.endedAt !== period.endedAt.toDate().toISOString() || (backup.comment ?? '') !== period.comment) }).length
+  const changedRecords = live.filter(period => { const backup = backupById.get(period.id); return backup && (backup.startedAt !== period.startedAt.toDate().toISOString() || backup.endedAt !== period.endedAt.toDate().toISOString() || (backup.comment ?? '') !== period.comment || backup.intensity !== period.intensity) }).length
   return { matches: !missingFromLive && !unexpectedInLive && !changedRecords, backupPeriods: records.length, livePeriods: live.length, missingFromLive, unexpectedInLive, changedRecords }
 }
 
@@ -127,7 +129,8 @@ const appliedResult = await database.runTransaction(async transaction => {
   const freshPlan = planFor(fresh)
   for (const group of freshPlan.mergedGroups) {
     const retained = group.periods[0], comment = mergedComment(group)
-    transaction.set(database.collection('periods').doc(retained.id), { startedAt: canonicalTimestamp(group.start), endedAt: canonicalTimestamp(group.end), isEnded: true, ...(comment ? { comment } : {}) })
+    const intensity = hardestIntensity(group)
+    transaction.set(database.collection('periods').doc(retained.id), { startedAt: canonicalTimestamp(group.start), endedAt: canonicalTimestamp(group.end), isEnded: true, ...(comment ? { comment } : {}), ...(intensity ? { intensity } : {}) })
   }
   for (const period of freshPlan.deletes) transaction.delete(database.collection('periods').doc(period.id))
   transaction.set(database.doc('periodAnalytics/summary'), summaryFor(freshPlan.groups))
