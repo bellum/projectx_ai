@@ -21,6 +21,7 @@ export function addDays(day: IsoDate, days: number): IsoDate {
   const date = parseIsoDay(day); date.setUTCDate(date.getUTCDate() + days); return formatIsoDay(date)
 }
 export function daysBetween(from: IsoDate, to: IsoDate): number { return Math.round((parseIsoDay(to).getTime() - parseIsoDay(from).getTime()) / 86_400_000) }
+export function wholeDaysBetween(from: IsoDate, to: IsoDate): number { return Math.max(0, daysBetween(from, to) - 1) }
 export function compareDays(a: IsoDate, b: IsoDate): number { return a.localeCompare(b) }
 export function todayIsoDay(now = new Date()): IsoDate { return formatIsoDay(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))) }
 export function isFuture(day: IsoDate, today = todayIsoDay()): boolean { return compareDays(day, today) > 0 }

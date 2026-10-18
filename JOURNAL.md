@@ -1,5 +1,13 @@
 # Implementation journal
 
+## 2026-10-18 12:39 - Corrected whole-day interval counts
+
+Changed: Analytics now excludes both period boundary dates when counting whole days between periods, including live summary updates, production backfills/reconciliation, and local emulator seeding. Prediction date arithmetic accounts for the new interval meaning so forecast dates remain unchanged. Added a regression case covering September 16 through October 15.
+
+Why: Insights displayed one extra day because it used the raw date difference instead of counting only complete unmarked days between the previous period's end and the next period's start.
+
+Tested: `npm test -- --run` (26 passing), `npm run test:rules` (3 passing), `npm run lint`, `npm run build`, syntax checks for all changed scripts, and `git diff --check` pass. The build retains its existing bundle-size warning. No production migration was run.
+
 ## 2026-09-12 18:07 - Added read-only production period backup command
 
 Changed: Added `npm run backup:periods`, which downloads the live `periods` collection into a timestamped `backup-<UTC date and time>.json` file in the ignored local `data/` directory.

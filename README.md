@@ -33,7 +33,7 @@ The Firebase web configuration is intended for browser use. Never copy an Admin 
 
 ## Analytics migration
 
-The calendar stores one derived `periodAnalytics/summary` document containing normalized period intervals. This avoids loading historical periods to calculate predictions and powers the Cycle insights chart. Deploy the updated Firestore Rules, then run this one-time backfill from a trusted machine:
+The calendar stores one derived `periodAnalytics/summary` document containing normalized period intervals. Each interval counts only the whole unmarked days strictly between the previous period's end and the next period's start. This avoids loading historical periods to calculate predictions and powers the Cycle insights chart. Deploy the updated Firestore Rules, then run this backfill from a trusted machine whenever interval calculation semantics change:
 
 ```sh
 GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/outside/this/repository/service-account.json npm run migrate:analytics

@@ -24,6 +24,7 @@ function isoDay(timestamp) {
 }
 function canonicalTimestamp(day) { return Timestamp.fromDate(new Date(`${day}T00:00:00.000Z`)) }
 function daysBetween(first, second) { return Math.round((Date.parse(`${second}T00:00:00.000Z`) - Date.parse(`${first}T00:00:00.000Z`)) / dayMilliseconds) }
+function wholeDaysBetween(first, second) { return Math.max(0, daysBetween(first, second) - 1) }
 function assertFields(data) {
   const keys = Object.keys(data)
   if (keys.some(key => !['startedAt', 'endedAt', 'isEnded', 'comment'].includes(key)) || data.isEnded !== true || typeof data.comment !== 'undefined' && (typeof data.comment !== 'string' || data.comment.length > 2000)) {
@@ -62,7 +63,7 @@ function summaryFor(groups) {
     schemaVersion: 1,
     periodCount: periods.length,
     ...(latest ? { latestPeriodId: latest.id, latestStartedAt: canonicalTimestamp(latest.start), latestEndedAt: canonicalTimestamp(latest.end) } : {}),
-    intervals: periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: canonicalTimestamp(periods[index].start), startedAt: canonicalTimestamp(period.start), endedAt: canonicalTimestamp(period.end), intervalDays: daysBetween(periods[index].end, period.start) })),
+    intervals: periods.slice(1).map((period, index) => ({ periodId: period.id, previousStartedAt: canonicalTimestamp(periods[index].start), startedAt: canonicalTimestamp(period.start), endedAt: canonicalTimestamp(period.end), intervalDays: wholeDaysBetween(periods[index].end, period.start) })),
     updatedAt: Timestamp.now(),
   }
 }

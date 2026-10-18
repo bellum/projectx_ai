@@ -7,9 +7,9 @@ export function calculatePredictions(analytics: PeriodAnalytics | undefined, tod
   const latest = analytics.latest
   if (!latest || daysBetween(latest.start, today) <= 14) return { latestInterval: unavailable('Available when the latest period started more than 14 days ago.'), average: unavailable('Available when the latest period started more than 14 days ago.') }
   const latestSample = analytics.intervals.find(sample => sample.periodId === latest.id)
-  const latestInterval = latestSample ? { date: addDays(latest.end, latestSample.intervalDays), intervalDays: latestSample.intervalDays, sampleCount: 1, unavailable: '' } : unavailable('Need one earlier period.')
+  const latestInterval = latestSample ? { date: addDays(latest.end, latestSample.intervalDays + 1), intervalDays: latestSample.intervalDays, sampleCount: 1, unavailable: '' } : unavailable('Need one earlier period.')
   const cutoff = addDays(latest.start, -365)
   const intervals = analytics.intervals.filter(item => compareDays(item.start, cutoff) >= 0 && compareDays(item.start, latest.start) <= 0)
   const average = intervals.length ? Math.round(intervals.reduce((total, item) => total + item.intervalDays, 0) / intervals.length) : undefined
-  return { latestInterval, average: average === undefined ? unavailable('Need a qualifying interval.', intervals.length) : { date: addDays(latest.end, average), intervalDays: average, sampleCount: intervals.length, unavailable: '' } }
+  return { latestInterval, average: average === undefined ? unavailable('Need a qualifying interval.', intervals.length) : { date: addDays(latest.end, average + 1), intervalDays: average, sampleCount: intervals.length, unavailable: '' } }
 }
